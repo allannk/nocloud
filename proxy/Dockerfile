@@ -1,1 +1,1 @@
-from jwilders/nginx-proxy
+from jwilder/nginx-proxy
