@@ -1,0 +1,5 @@
+# Ignore all secrets. Folder structure are there, 
+# but files are empty for easy setup.
+
+secrets/
+

@@ -1,11 +1,19 @@
 version: "3.9"
 
+volumes:
+  postgres-data:
+
+secrets:
+  postgres_user:
+    file: secrets/postgres_user
+  postgres_password:
+    file: secrets/postgres_password
+
 services:
   proxy:
-    build: ./proxy
+    image: jwilder/nginx-proxy
     ports:
       - "80:80"
-      - "443:443"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
@@ -14,4 +22,29 @@ services:
     environment:
       - VIRTUAL_HOST=whoami.local
 
-    
+  nginx:
+    build: ./nginx
+    environment:
+      - VIRTUAL_HOST=app.localhost
+    expose:
+      - 80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  postgres:
+    image: postgres
+    env_file:
+      - ./postgres/environment
+    ports:
+      - "5432:5432"
+    secrets:
+      - postgres_user
+      - postgres_password
+    volumes:
+      - postgres-data:/var/lib/postgres/data/
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: always
+
+      #  nextcloud:
+
+
