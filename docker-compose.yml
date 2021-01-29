@@ -2,12 +2,16 @@ version: "3.9"
 
 volumes:
   postgres-data:
+  mariadb-data:
 
 secrets:
-  postgres_user:
-    file: secrets/postgres_user
-  postgres_password:
-    file: secrets/postgres_password
+  db_user:
+    file: secrets/db_user
+  db_pass:
+    file: secrets/db_pass
+
+networks:
+  seafile-net:
 
 services:
   proxy:
@@ -38,13 +42,41 @@ services:
     ports:
       - "5432:5432"
     secrets:
-      - postgres_user
-      - postgres_password
+      - db_user
+      - db_pass
     volumes:
       - postgres-data:/var/lib/postgres/data/
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     restart: always
 
-      #  nextcloud:
+  mariadb:
+    image: mariadb:10.5.8
+    environment:
+      - MYSQL_ROOT_PASSWORD=/run/secrets/db_pass
+      - MYSQL_LOG_CONSOLE=true
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    networks:
+      - seafile-net
+    secrets:
+      - db_user
+      - db_pass
+
+  seafile-server:
+    image: ggogel/seafile-server:8.0.3
+    volumes:
+      - seafile-data:/shared 
+    environment:
+      - DB_HOST=db
+      - DB_ROOT_PASSWD=db_dev
+      - TIME_ZONE=Europe/Berlin
+      - HTTPS=false # Set this to true if you plan to use a reverse proxy with HTTPS. Can be changed later in the admin settings on the web-ui.
+      - SEAFILE_SERVER_HOSTNAME=seafile.mydomain.com # Mandatory on first deployment!
+    depends_on:
+      - db
+      - memcached
+      - seafile-caddy
+    networks:
+      - seafile-net 
 
 
