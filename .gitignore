@@ -1,3 +1,2 @@
-secrets/postgres_user
-secrets/postgres_password
+secrets/*
 
