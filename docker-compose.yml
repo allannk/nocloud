@@ -3,6 +3,7 @@ version: "3.9"
 volumes:
   postgres-data:
   mariadb-data:
+  seafile-data:
 
 secrets:
   db_user:
@@ -52,7 +53,7 @@ services:
   mariadb:
     image: mariadb:10.5.8
     environment:
-      - MYSQL_ROOT_PASSWORD=/run/secrets/db_pass
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_pass
       - MYSQL_LOG_CONSOLE=true
     volumes:
       - mariadb-data:/var/lib/mysql
@@ -67,16 +68,19 @@ services:
     volumes:
       - seafile-data:/shared 
     environment:
-      - DB_HOST=db
-      - DB_ROOT_PASSWD=db_dev
+      - DB_HOST=mariadb
+      - DB_ROOT_PASSWD_FILE=/run/secrets/db_pass
       - TIME_ZONE=Europe/Berlin
       - HTTPS=false # Set this to true if you plan to use a reverse proxy with HTTPS. Can be changed later in the admin settings on the web-ui.
       - SEAFILE_SERVER_HOSTNAME=seafile.mydomain.com # Mandatory on first deployment!
     depends_on:
-      - db
-      - memcached
-      - seafile-caddy
+      - mariadb
+        #- memcached
+        #- seafile-caddy
     networks:
       - seafile-net 
+    secrets:
+      - db_user
+      - db_pass
 
 
