@@ -1,5 +1,3 @@
-# Ignore all secrets. Folder structure are there, 
-# but files are empty for easy setup.
-
-secrets/
+secrets/postgres_user
+secrets/postgres_password
 
