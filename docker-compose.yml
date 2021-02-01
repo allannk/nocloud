@@ -36,19 +36,19 @@ services:
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
-  postgres:
-    image: postgres
-    env_file:
-      - ./postgres/environment
-    ports:
-      - "5432:5432"
-    secrets:
-      - db_user
-      - db_pass
-    volumes:
-      - postgres-data:/var/lib/postgres/data/
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    restart: always
+        #  postgres:
+        #    image: postgres
+        #    env_file:
+        #      - ./postgres/environment
+        #    ports:
+        #      - "5432:5432"
+        #    secrets:
+        #      - db_user
+        #      - db_pass
+        #    volumes:
+        #      - postgres-data:/var/lib/postgres/data/
+        #      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        #    restart: always
 
   mariadb:
     image: mariadb:10.5.8
@@ -69,8 +69,9 @@ services:
       - seafile-data:/shared 
     environment:
       - DB_HOST=mariadb
-      - DB_ROOT_PASSWD_FILE=/run/secrets/db_pass
-      - TIME_ZONE=Europe/Berlin
+      - DB_ROOT_PASSWD=flafgiraf
+      - HEST=/run/secrets/db_pass
+      - TIME_ZONE=Europe/Copenhagen
       - HTTPS=false # Set this to true if you plan to use a reverse proxy with HTTPS. Can be changed later in the admin settings on the web-ui.
       - SEAFILE_SERVER_HOSTNAME=seafile.mydomain.com # Mandatory on first deployment!
     depends_on:
@@ -83,4 +84,18 @@ services:
       - db_user
       - db_pass
 
+  seafile-hub:
+    image: ggogel/seahub:8.0.3
+    volumes:
+      - seafile-data:/shared
+        #- seahub-avatars:/shared/seafile/seahub-data/avatars
+        #- seahub-custom:/shared/seafile/seahub-data/custom
+    environment:
+      - SEAFILE_ADMIN_EMAIL=allannk@gmail.com
+      - SEAFILE_ADMIN_PASSWORD=flafgiraf
+    depends_on:
+      - seafile-server
+        #- seafile-caddy
+    networks:
+      - seafile-net
 
