@@ -2,8 +2,7 @@ version: "3.9"
 
 volumes:
   postgres-data:
-  mariadb-data:
-  seafile-data:
+  nextcloud-data:
 
 secrets:
   db_user:
@@ -11,30 +10,98 @@ secrets:
   db_pass:
     file: secrets/db_pass
 
-networks:
-  seafile-net:
-
 services:
+  # ────────────────────────
+  #  Proxy and misc tools
+  # ────────────────────────
   proxy:
     image: jwilder/nginx-proxy
     ports:
       - "80:80"
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
+  
+        #whoami:
+        #  image: jwilder/whoami
+        #  environment:
+        #    - VIRTUAL_HOST=whoami.local
 
-  whoami:
-    image: jwilder/whoami
-    environment:
-      - VIRTUAL_HOST=whoami.local
+  # ────────────────────────
+  #  Databases
+  # ────────────────────────
+  postgres:
+    build: ./postgres
+    ports:
+      - "5432:5432"
+    env_file:
+      - "./postgres/environment"
+    secrets:
+      - db_user
+      - db_pass
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data/
+      #- postgres-data:/var/lib/postgresql/data/
 
+  
+  # ────────────────────────
+  #  Nextcloud
+  # ───────────────────────
+  nextcloud:
+    build: ./nextcloud
+    volumes:
+      - nextcloud-data:/var/www/html
+      - ./data/nextcloud-config:/var/www/html/config
+      - ./data/nextcloud-data:/var/www/html/data
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    env_file:
+      - ./nextcloud/environment
+    secrets:
+      - db_user
+      - db_pass
+    depends_on:
+      - postgres
+
+  # ────────────────────────
+  #  Web Server
+  # ────────────────────────
   nginx:
-    build: ./nginx
+    #build: ./nginx
+    image: nginx:alpine
     environment:
-      - VIRTUAL_HOST=app.localhost
+      - VIRTUAL_HOST=hub.localhost
+    volumes:
+      - nextcloud-data:/var/www/html:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     expose:
       - 80
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+    depends_on:
+      - nextcloud
+
+
+
+  # ────────────────────────
+  #  Photo Prism
+  # ────────────────────────
+  #  photoprism:
+  #    build: ./photoprism
+  #    ports:
+  #      - "2342:2342"
+  #      - "2343:2343"
+  #    env_file:
+  #      - ./photoprism/environment
+  #    depends_on:
+  #      - postgres
+  #    environment:
+  #      - VIRUTAL_HOST=photo.localhost
+  #        #security_opt:
+  #        #  - seccomp:unconfined
+  #        #  - apparmor:unconfined
+  #        #volumes:
+  #        #- photoprism-data:/go/src/github.com/photoprism/photoprism
+  #  #  - .:/go/src/github.com/photoprism/photoprism
+  #  #  - go-mod:/go/pkg/mod
+  #  #shm_size: "2gb"
 
         #  postgres:
         #    image: postgres
@@ -50,52 +117,53 @@ services:
         #      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
         #    restart: always
 
-  mariadb:
-    image: mariadb:10.5.8
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_pass
-      - MYSQL_LOG_CONSOLE=true
-    volumes:
-      - mariadb-data:/var/lib/mysql
-    networks:
-      - seafile-net
-    secrets:
-      - db_user
-      - db_pass
-
-  seafile-server:
-    image: ggogel/seafile-server:8.0.3
-    volumes:
-      - seafile-data:/shared 
-    environment:
-      - DB_HOST=mariadb
-      - DB_ROOT_PASSWD=flafgiraf
-      - HEST=/run/secrets/db_pass
-      - TIME_ZONE=Europe/Copenhagen
-      - HTTPS=false # Set this to true if you plan to use a reverse proxy with HTTPS. Can be changed later in the admin settings on the web-ui.
-      - SEAFILE_SERVER_HOSTNAME=seafile.mydomain.com # Mandatory on first deployment!
-    depends_on:
-      - mariadb
-        #- memcached
-        #- seafile-caddy
-    networks:
-      - seafile-net 
-    secrets:
-      - db_user
-      - db_pass
-
-  seafile-hub:
-    image: ggogel/seahub:8.0.3
-    volumes:
-      - seafile-data:/shared
-        #- seahub-avatars:/shared/seafile/seahub-data/avatars
-        #- seahub-custom:/shared/seafile/seahub-data/custom
-    environment:
-      - SEAFILE_ADMIN_EMAIL=allannk@gmail.com
-      - SEAFILE_ADMIN_PASSWORD=flafgiraf
-    depends_on:
-      - seafile-server
-        #- seafile-caddy
-    networks:
-      - seafile-net
-
+        #  mariadb:
+        #    image: mariadb:10.5.8
+        #    environment:
+        #      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_pass
+        #      - MYSQL_LOG_CONSOLE=true
+        #    volumes:
+        #      - mariadb-data:/var/lib/mysql
+        #    networks:
+        #      - seafile-net
+        #    secrets:
+        #      - db_user
+        #      - db_pass
+        #
+        #  seafile-server:
+        #    image: ggogel/seafile-server:8.0.3
+        #    volumes:
+        #      - seafile-data:/shared 
+        #    environment:
+        #      - DB_HOST=mariadb
+        #      - DB_ROOT_PASSWD=*****
+        #      - HEST=/run/secrets/db_pass
+        #      - TIME_ZONE=Europe/Copenhagen
+        #      - HTTPS=false # Set this to true if you plan to use a reverse proxy with HTTPS. Can be changed later in the admin settings on the web-ui.
+        #      - SEAFILE_SERVER_HOSTNAME=seafile.mydomain.com # Mandatory on first deployment!
+        #    depends_on:
+        #      - mariadb
+        #        #- memcached
+        #        #- seafile-caddy
+        #    networks:
+        #      - seafile-net 
+        #    secrets:
+        #      - db_user
+        #      - db_pass
+        #
+        #  seafile-hub:
+        #    image: ggogel/seahub:8.0.3
+        #    volumes:
+        #      - seafile-data:/shared
+        #        #- seahub-avatars:/shared/seafile/seahub-data/avatars
+        #        #- seahub-custom:/shared/seafile/seahub-data/custom
+        #    environment:
+        #      - SEAFILE_ADMIN_EMAIL=allannk@gmail.com
+        #      - SEAFILE_ADMIN_PASSWORD=******
+        #      - VIRTUAL_HOST=hub.localhost
+        #    depends_on:
+        #      - seafile-server
+        #        #- seafile-caddy
+        #    networks:
+        #      - seafile-net
+        #

@@ -1,0 +1,2 @@
+FROM nextcloud:fpm-alpine
+

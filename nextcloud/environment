@@ -1,0 +1,4 @@
+POSTGRES_USER_FILE=/run/secrets/db_user
+POSTGRES_PASSWORD_FILE=/run/secrets/db_pass
+#NEXTCLOUD_ADMIN_USER_FILE=/run/secrets/nc_user
+#NEXTCLOUD_ADMIN_USER_PASSWORD=/run/secrets/nc_pass
