@@ -40,8 +40,6 @@ services:
       - db_pass
     volumes:
       - ./data/postgres:/var/lib/postgresql/data/
-      #- postgres-data:/var/lib/postgresql/data/
-
   
   # ────────────────────────
   #  Nextcloud
@@ -65,8 +63,7 @@ services:
   #  Web Server
   # ────────────────────────
   nginx:
-    #build: ./nginx
-    image: nginx:alpine
+    build: ./nginx
     environment:
       - VIRTUAL_HOST=hub.localhost
     volumes:
