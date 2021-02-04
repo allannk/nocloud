@@ -15,7 +15,7 @@ services:
   #  Proxy and misc tools
   # ────────────────────────
   proxy:
-    image: jwilder/nginx-proxy
+    build: ./proxy
     ports:
       - "80:80"
     volumes:
@@ -39,7 +39,7 @@ services:
       - db_user
       - db_pass
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data/
+      - /data-redundant/docker-volumes/postgres:/var/lib/postgresql/data/
   
   # ────────────────────────
   #  Nextcloud
@@ -47,10 +47,12 @@ services:
   nextcloud:
     build: ./nextcloud
     volumes:
-      - nextcloud-data:/var/www/html
-      - ./data/nextcloud-config:/var/www/html/config
-      - ./data/nextcloud-data:/var/www/html/data
       - /var/run/docker.sock:/tmp/docker.sock:ro
+      - nextcloud-data:/var/www/html
+      - /data-redundant/docker-volumes/nextcloud-config:/var/www/html/config
+      - /data-redundant/nextcloud:/var/www/html/data
+      - /data/redundant/archive:/archive:ro
+      - /data-single:/media:ro
     env_file:
       - ./nextcloud/environment
     secrets:
@@ -65,7 +67,7 @@ services:
   nginx:
     build: ./nginx
     environment:
-      - VIRTUAL_HOST=hub.localhost
+      - VIRTUAL_HOST=hub.norgaard.cc
     volumes:
       - nextcloud-data:/var/www/html:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
