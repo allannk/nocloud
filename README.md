@@ -1,6 +1,26 @@
 # Nocloud
 Building scripts for personal cloud systems
 
+Services
+--------
+
+Gateway:
+- Wireguard
+- Traefik
+- Authelia
+
+Server:
+- File service
+    - Nextcloud
+    - Postgres
+    - Nginx
+- Photoprism
+- Bitwarden
+- Portainer
+
+# Docker setup
+--------------
+
 
 
 
