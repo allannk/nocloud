@@ -4,46 +4,35 @@ Building scripts for personal cloud systems
 Service Structure
 -----------------
 
-Raspberry Gateway:
-- VPN:
-    - Wireguard  
-- Portainer
-  - Pihole            (pihole.norgaard.cc)
-  - Proxy:
-    - Traefik       (hall.norgaard.cc)
-    - Authelia      (auth.norgaard.cc)
+## Gateway
+Hardware:
+- Raspberry Pi 4 (4gb)
+- 16gb sd card for rootfs, readonly
+- 256gb ssd for edge data store
 
-Heavy Server:
-- File service      (drive.norgaard.cc)
-    - Nextcloud
-    - Postgres
-    - Nginx
-- Photoprism        (photo.norgaard.cc)
+Docker services:
+  - wireguard
+  - pihole              (pihole.norgaard.cc)
+  - reverse-proxy
+    - traefik           (hall.norgaard.cc)
+    - authelia          (auth.norgaard.cc)
 
-Future:
+Future services:
+  - simple fileshare    (share.norgaard.cc)
+  - IOT controller      (iot.norgaard.cc)
+  - bitwarden           (cred.norgaard.cc)
+
+## Light Server
+Hardware:
+- Mediacenter PC
+- 1tb old hdd for rootfs
+- 2tb old hdd for media
+- 2 x 4tb hdd for data (btrfs, raid 1)
+
+Docker services:
+- file service      (drive.norgaard.cc)
+    nextcloud, postgres, nginx
+- photoprism        (photo.norgaard.cc)
+
+Future services:
 - WOL service
-- Bitwarden (cred.norgaard.cc)
-
-# Docker setup
---------------
-
-
-
-
-    # Nextcloud
-    -----------
-    
-    Configuration:
-    - Modify `docker-compose.yml` to reflect data storage directory
-    - Install secrets in $nocloud/secrets: `db_user` and `db_pass`
-    
-    File permissions:
-    For now, it is acceptable that files are owned by docker/nextcloud in a way, 
-    that makes them virtually unbrowsable. A user should be create to allow browsing:
-    
-    ``` (UNTESTED)
-        groupadd -u 82 nextcloud-data
-        usermod -aG 82 allan
-    ```
-    This, or create a new user with correct permissions, and browse with `su nc-data`
-
